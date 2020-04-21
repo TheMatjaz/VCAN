@@ -23,7 +23,9 @@ vcan_err_t vcan_init(vcan_bus_t* const bus)
     return err;
 }
 
-vcan_err_t vcan_tx(vcan_bus_t* const bus, const vcan_msg_t* const msg)
+vcan_err_t vcan_tx(vcan_bus_t* const bus,
+                   const vcan_msg_t* const msg,
+                   const vcan_node_t* const src_node)
 {
     vcan_err_t err;
     if (bus == NULL)
@@ -38,8 +40,11 @@ vcan_err_t vcan_tx(vcan_bus_t* const bus, const vcan_msg_t* const msg)
     {
         for (size_t i = 0; i < bus->connected; i++)
         {
-            memcpy(&bus->nodes[i]->received_msg, msg, sizeof(vcan_msg_t));
-            bus->nodes[i]->callback_on_rx(bus->nodes[i]);
+            if (src_node != bus->nodes[i])
+            {
+                memcpy(&bus->nodes[i]->received_msg, msg, sizeof(vcan_msg_t));
+                bus->nodes[i]->callback_on_rx(bus->nodes[i]);
+            }
         }
         err = VCAN_OK;
     }
@@ -62,14 +67,24 @@ vcan_err_t vcan_connect(vcan_bus_t* const bus,
     {
         err = VCAN_NULL_CALLBACK;
     }
-    else if (bus->connected >= VCAN_MAX_NODES)
+    else if (bus->connected >= VCAN_MAX_CONNECTED_NODES)
     {
         err = VCAN_TOO_MANY_CONNECTED;
     }
     else
     {
-        bus->nodes[bus->connected++] = node;
         err = VCAN_OK;
+        for (size_t i = 0; i < bus->connected; i++)
+        {
+            if (bus->nodes[i] == node)
+            {
+                err = VCAN_ALREADY_CONNECTED;
+            }
+        }
+        if (err == VCAN_OK)
+        {
+            bus->nodes[bus->connected++] = node;
+        }
     }
     return err;
 }
@@ -88,7 +103,7 @@ vcan_err_t vcan_disconnect(vcan_bus_t* const bus,
     }
     else
     {
-        err = VCAN_NOT_FOUND;
+        err = VCAN_NODE_NOT_FOUND;
         for (size_t i = 0; i < bus->connected; i++)
         {
             if (bus->nodes[i] == node)
