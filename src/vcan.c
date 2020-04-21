@@ -40,7 +40,7 @@ vcan_err_t vcan_tx(vcan_bus_t* const bus,
     {
         for (size_t i = 0; i < bus->connected; i++)
         {
-            if (src_node != bus->nodes[i])
+            if (bus->nodes[i] != src_node)
             {
                 memcpy(&bus->nodes[i]->received_msg, msg, sizeof(vcan_msg_t));
                 bus->nodes[i]->callback_on_rx(bus->nodes[i]);
