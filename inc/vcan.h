@@ -30,6 +30,7 @@ extern "C"
 {
 #endif
 
+/** VCAN version using semantic versioning. */
 #define VCAN_VERSION "1.0.0rc"
 
 #include <stdint.h>
@@ -45,16 +46,27 @@ extern "C"
 /** VCAN error codes. */
 typedef enum
 {
-    VCAN_OK = 0,  /** Successfully completed. */
-    VCAN_NULL_BUS = 1,  /** The bus argument is NULL. */
-    VCAN_NULL_MSG = 2,  /** The message argument is NULL. */
-    VCAN_NULL_NODE = 3,  /** The node argument is NULL. */
-    VCAN_NULL_CALLBACK = 4,  /** The callback within the node is NULL. */
-    VCAN_TOO_MANY_CONNECTED = 5,  /** Max amount of connected nodes reached.
-                                   * Increase #VCAN_MAX_CONNECTED_NODES. */
-    VCAN_NODE_NOT_FOUND = 6,  /** This node is not connected to the bus,
-                               * so it cannot be disconnected. */
-    VCAN_ALREADY_CONNECTED = 7, /** The node is already connected. */
+    /** Successfully completed. */
+            VCAN_OK = 0,
+    /** The bus argument is NULL. */
+            VCAN_NULL_BUS = 1,
+    /** The message argument is NULL. */
+            VCAN_NULL_MSG = 2,
+    /** The node argument is NULL. */
+            VCAN_NULL_NODE = 3,
+    /** The callback within the node is NULL. */
+            VCAN_NULL_CALLBACK = 4,
+
+    /**
+     * Max amount of connected nodes reached.
+     * Consider increasing #VCAN_MAX_CONNECTED_NODES.
+     */
+            VCAN_TOO_MANY_CONNECTED = 5,
+
+    /** This node is not connected to the bus, so it cannot be disconnected. */
+            VCAN_NODE_NOT_FOUND = 6,
+    /** The node is already connected to the bus. */
+            VCAN_ALREADY_CONNECTED = 7,
 } vcan_err_t;
 
 /** Message to transmit or receive. */
