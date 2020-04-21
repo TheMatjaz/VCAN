@@ -27,7 +27,7 @@ static void test_init_valid(void)
     vcan_err_t err = vcan_init(&bus);
 
     atto_eq(err, VCAN_OK);
-    atto_zeros((uint8_t*) &bus, sizeof(bus));
+    atto_zeros((uint8_t*) &bus, sizeof(bus))
 }
 
 static void test_connect_null_bus(void)
@@ -186,24 +186,24 @@ static void test_disconnect_not_found(void)
     vcan_bus_t bus;
     vcan_err_t err = vcan_init(&bus);
     atto_eq(err, VCAN_OK);
-    vcan_node_t node = {
+    vcan_node_t node_1 = {
             .callback_on_rx = does_nothing,
             .other_custom_data = NULL,
             .received_msg.id = 42
     };
-    vcan_node_t node2 = {
+    vcan_node_t node_2 = {
             .callback_on_rx = does_nothing,
             .other_custom_data = NULL,
             .received_msg.id = 42 + 1
     };
-    err = vcan_connect(&bus, &node);
+    err = vcan_connect(&bus, &node_1);
     atto_eq(err, VCAN_OK);
 
-    err = vcan_disconnect(&bus, &node2);
+    err = vcan_disconnect(&bus, &node_2);
 
     atto_eq(err, VCAN_NODE_NOT_FOUND);
     atto_eq(bus.connected, 1);
-    atto_eq(bus.nodes[0], &node);
+    atto_eq(bus.nodes[0], &node_1);
 }
 
 static void test_tx_null_bus(void)
@@ -241,12 +241,12 @@ static void test_tx_no_nodes_connected(void)
     atto_eq(err, VCAN_OK);
 }
 
-static void sets_custom_data_to_1(vcan_node_t* const node)
+static void sets_custom_data_to_1(vcan_node_t* node)
 {
     node->other_custom_data = (void*) 1;
 }
 
-static void sets_custom_data_to_2(vcan_node_t* const node)
+static void sets_custom_data_to_2(vcan_node_t* node)
 {
     node->other_custom_data = (void*) 2;
 }
@@ -256,24 +256,24 @@ static void test_tx_to_all_nodes(void)
     vcan_bus_t bus;
     vcan_err_t err = vcan_init(&bus);
     atto_eq(err, VCAN_OK);
-    vcan_node_t node1 = {
+    vcan_node_t node_1 = {
             .callback_on_rx = sets_custom_data_to_1,
             .other_custom_data = NULL,
             .received_msg.id = 42,
             .received_msg.len = 50
     };
-    vcan_node_t node2 = {
+    vcan_node_t node_2 = {
             .callback_on_rx = sets_custom_data_to_1,
             .other_custom_data = NULL,
             .received_msg.id = 43,
             .received_msg.len = 51
     };
-    err = vcan_connect(&bus, &node1);
+    err = vcan_connect(&bus, &node_1);
     atto_eq(err, VCAN_OK);
-    err = vcan_connect(&bus, &node2);
+    err = vcan_connect(&bus, &node_2);
     atto_eq(err, VCAN_OK);
     // Setting one callback after connecting.
-    node2.callback_on_rx = sets_custom_data_to_2;
+    node_2.callback_on_rx = sets_custom_data_to_2;
     vcan_msg_t msg = {
             .id = 20,
             .len = 3,
@@ -284,11 +284,11 @@ static void test_tx_to_all_nodes(void)
 
     atto_eq(err, VCAN_OK);
     // Message was copied
-    atto_memeq(&node1.received_msg, &msg, sizeof(msg));
-    atto_memeq(&node2.received_msg, &msg, sizeof(msg));
+    atto_memeq(&node_1.received_msg, &msg, sizeof(msg));
+    atto_memeq(&node_2.received_msg, &msg, sizeof(msg));
     // Callbacks were called
-    atto_eq((int) node1.other_custom_data, 1);
-    atto_eq((int) node2.other_custom_data, 2);
+    atto_eq((int) node_1.other_custom_data, 1);
+    atto_eq((int) node_2.other_custom_data, 2);
 }
 
 
@@ -297,43 +297,43 @@ static void test_tx_to_all_nodes_except_source(void)
     vcan_bus_t bus;
     vcan_err_t err = vcan_init(&bus);
     atto_eq(err, VCAN_OK);
-    vcan_node_t node1 = {
+    vcan_node_t node_1 = {
             .callback_on_rx = sets_custom_data_to_1,
             .other_custom_data = NULL,
             .received_msg.id = 42,
             .received_msg.len = 50
     };
-    vcan_node_t node2 = {
+    vcan_node_t node_2 = {
             .callback_on_rx = does_nothing,
             .other_custom_data = NULL,
             .received_msg.id = 43,
             .received_msg.len = 0xAB
     };
-    err = vcan_connect(&bus, &node1);
+    err = vcan_connect(&bus, &node_1);
     atto_eq(err, VCAN_OK);
-    err = vcan_connect(&bus, &node2);
+    err = vcan_connect(&bus, &node_2);
     atto_eq(err, VCAN_OK);
     // Setting one callback after connecting.
-    node2.callback_on_rx = sets_custom_data_to_2;
+    node_2.callback_on_rx = sets_custom_data_to_2;
     vcan_msg_t msg = {
             .id = 20,
             .len = 3,
             .data = {1, 2, 3}
     };
 
-    err = vcan_tx(&bus, &msg, &node2);
+    err = vcan_tx(&bus, &msg, &node_2);
 
     atto_eq(err, VCAN_OK);
     // Message was copied
-    atto_memeq(&node1.received_msg, &msg, sizeof(msg));
+    atto_memeq(&node_1.received_msg, &msg, sizeof(msg));
     // Callback was called
-    atto_eq((int) node1.other_custom_data, 1);
+    atto_eq((int) node_1.other_custom_data, 1);
     // Source node untouched
-    atto_eq(node2.other_custom_data, NULL);
-    atto_eq(node2.received_msg.len, 0xAB);
+    atto_eq(node_2.other_custom_data, NULL);
+    atto_eq(node_2.received_msg.len, 0xAB);
 }
 
-static void callback_print_msg(vcan_node_t* const node)
+static void callback_print_msg(vcan_node_t* node)
 {
     printf("Node %"PRIu32" received "
            "ID: 0x%08"PRIX32""
@@ -359,26 +359,26 @@ static void test_readme_example(void)
 
     // Create 3 virtual nodes.
     // Make them print the received message on reception.
-    vcan_node_t node1 = {
+    vcan_node_t node_1 = {
             .id = 1,
             .callback_on_rx = callback_print_msg,
     };
-    vcan_node_t node2 = {
+    vcan_node_t node_2 = {
             .id = 2,
             .callback_on_rx = callback_print_msg,
     };
-    vcan_node_t node3 = {
+    vcan_node_t node_3 = {
             .id = 3,
             .callback_on_rx = callback_print_msg,
     };
 
     // Connect the nodes to the bus - by default up to 16 nodes.
     // It's just a #define constant, it can be changed easily.
-    err = vcan_connect(&bus, &node1); // Fails on NULL args or full bus
+    err = vcan_connect(&bus, &node_1); // Fails on NULL args or full bus
     assert(err == VCAN_OK);
-    err = vcan_connect(&bus, &node2); // Fails on NULL args or full bus
+    err = vcan_connect(&bus, &node_2); // Fails on NULL args or full bus
     assert(err == VCAN_OK);
-    err = vcan_connect(&bus, &node3); // Fails on NULL args or full bus
+    err = vcan_connect(&bus, &node_3); // Fails on NULL args or full bus
     assert(err == VCAN_OK);
 
     // Transmit!
@@ -388,7 +388,7 @@ static void test_readme_example(void)
             .len = 3,
             .data = {0x00, 0x1A, 0x2B}
     };
-    err = vcan_tx(&bus, &msg, &node1); // Fails on NULL bus or NULL msg
+    err = vcan_tx(&bus, &msg, &node_1); // Fails on NULL bus or NULL msg
     assert(err == VCAN_OK);
 
     // Because we transmitted from node 1, only node 2 and node 3 received the
@@ -413,14 +413,14 @@ static void test_readme_example(void)
     // Node 3 received ID: 0x0000ABCD | Len: 3 | Data: 00 1A 2B
 
     // Disconnecting nodes is easy.
-    err = vcan_disconnect(&bus, &node2); // Fails on NULL args or already
+    err = vcan_disconnect(&bus, &node_2); // Fails on NULL args or already
     // disconnected node
     assert(err == VCAN_OK);
 
-    // Now node2 will not receive anything anymore.
+    // Now node_2 will not receive anything anymore.
     puts("Transmitting from node 1 after node 2 disconnection,"
          " node 3 receives.");
-    err = vcan_tx(&bus, &msg, &node1);
+    err = vcan_tx(&bus, &msg, &node_1);
     assert(err == VCAN_OK);
 
     // And now the stdout should look like this:

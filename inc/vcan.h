@@ -114,7 +114,7 @@ struct vcan_node
      * it. */
     uint32_t id;
 
-    /** The just recepived message. */
+    /** The just-received message. */
     vcan_msg_t received_msg;
 };
 
@@ -141,7 +141,7 @@ typedef struct
 } vcan_bus_t;
 
 /**
- * Inits the bus.
+ * Initialises the bus.
  *
  * @param bus not NULL
  * @return
