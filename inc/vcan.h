@@ -4,18 +4,21 @@
  * VCAN is a tiny virtual CAN and CAN-FD bus.
  *
  * Especially useful for debugging and testing without using actual
- * CAN-connected devices, VCAN allows the user to connect virtual nodes on a
- * virtual bus and make them react whenever someone transmits a message
- * on the bus. After the transmission, each node obtains a copy of the message
+ * CAN-connected devices, VCAN is a tiny C library that allows the user to
+ * connect virtual nodes on a virtual bus and make them react whenever
+ * someone transmits a message on the bus.
+ *
+ * After the transmission, each node obtains a copy of the message
  * and a callback on each node is called to warn the node of a message being
  * received.
  *
  * **Limitations**
  *
  * VCAN is simple, synchronous and single-threaded. It does not simulate
- * transmission errors, collisions, arbitration, just pure data transfer.
+ * transmission errors, collisions, arbitration, etc. just pure data transfer.
+ * Callbacks should be fast.
  *
- * You are free to alter it to your specific needs.
+ * ... but you are free to alter it to your specific needs!
  *
  * @copyright Copyright © 2020, Matjaž Guštin <dev@matjaz.it>
  * <https://matjaz.it>. All rights reserved.
@@ -31,7 +34,7 @@ extern "C"
 #endif
 
 /** VCAN version using semantic versioning. */
-#define VCAN_VERSION "1.0.0rc"
+#define VCAN_VERSION "1.0.0"
 
 #include <stdint.h>
 #include <stddef.h>
@@ -106,6 +109,10 @@ struct vcan_node
     /** Any data the callback may need, such as a flag to trigger on
      * reception. Can be NULL. */
     void* other_custom_data;
+
+    /** Identifier of the node. Can be set to anything, VCAN does not change
+     * it. */
+    uint32_t id;
 
     /** The just recepived message. */
     vcan_msg_t received_msg;

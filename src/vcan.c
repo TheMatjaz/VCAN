@@ -112,6 +112,7 @@ vcan_err_t vcan_disconnect(vcan_bus_t* const bus,
                 memmove(&bus->nodes[i],
                         &bus->nodes[i + 1],
                         nodes_to_shift * sizeof(vcan_node_t*));
+                bus->connected--;
                 err = VCAN_OK;
                 break;
             }
