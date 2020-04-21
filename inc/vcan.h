@@ -40,7 +40,7 @@ extern "C"
 /** Max payload size of a CAN message in bytes. */
 #define VCAN_DATA_MAX_LEN 64
 /** MAx amount of virtual nodes connected to the virtual bus. */
-#define VCAN_MAX_CONNECTED_NODES 32
+#define VCAN_MAX_CONNECTED_NODES 16
 
 /** VCAN error codes. */
 typedef enum
@@ -132,24 +132,6 @@ typedef struct
 vcan_err_t vcan_init(vcan_bus_t* bus);
 
 /**
- * Sends a copy of the message to every connected node and calls every nodes's
- * callback to notify them.
- *
- * If you include a transmitting node, that one is excluded from the reception.
- *
- * @param bus not NULL
- * @param msg not NULL
- * @param src_node can be NULL
- * @return
- * - #VCAN_NULL_BUS on \p bus being NULL
- * - #VCAN_NULL_MSG on \p msg being NULL
- * - #VCAN_OK otherwise
- */
-vcan_err_t vcan_tx(vcan_bus_t* bus,
-                   const vcan_msg_t* msg,
-                   const vcan_node_t* src_node);
-
-/**
  * Attaches a new node to the bus, enabling it to receive any transmitted
  * message.
  *
@@ -185,6 +167,24 @@ vcan_err_t vcan_connect(vcan_bus_t* bus, vcan_node_t* node);
  * - #VCAN_OK otherwise
  */
 vcan_err_t vcan_disconnect(vcan_bus_t* bus, const vcan_node_t* node);
+
+/**
+ * Sends a copy of the message to every connected node and calls every nodes's
+ * callback to notify them.
+ *
+ * If you include a transmitting node, that one is excluded from the reception.
+ *
+ * @param bus not NULL
+ * @param msg not NULL
+ * @param src_node can be NULL
+ * @return
+ * - #VCAN_NULL_BUS on \p bus being NULL
+ * - #VCAN_NULL_MSG on \p msg being NULL
+ * - #VCAN_OK otherwise
+ */
+vcan_err_t vcan_tx(vcan_bus_t* bus,
+                   const vcan_msg_t* msg,
+                   const vcan_node_t* src_node);
 
 #ifdef __cplusplus
 }

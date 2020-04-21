@@ -6,7 +6,7 @@
  * @license BSD 3-clause license.
  */
 
-#include "vcan.h"
+#include "../inc/vcan.h"
 
 vcan_err_t vcan_init(vcan_bus_t* const bus)
 {

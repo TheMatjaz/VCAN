@@ -3,4 +3,7 @@ project(vcan C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_library(vcan vcan.c vcan.h)
+include_directories(inc/)
+add_library(vcan src/vcan.c)
+include_directories(tst/)
+add_executable(testvcan src/vcan.c inc/vcan.h tst/atto.c tst/test.c)
