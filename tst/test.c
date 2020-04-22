@@ -56,7 +56,6 @@ static void test_connect_null_callback(void)
     vcan_node_t node = {
             .callback_on_rx = NULL,
             .other_custom_data = NULL,
-            .received_msg.id = 42
     };
 
     err = vcan_connect(&bus, &node);
@@ -64,9 +63,10 @@ static void test_connect_null_callback(void)
     atto_eq(err, VCAN_NULL_CALLBACK);
 }
 
-static void does_nothing(vcan_node_t* node)
+static void does_nothing(vcan_node_t* node, const vcan_msg_t* msg)
 {
     (void) node;
+    (void) msg;
 }
 
 static void test_connect_valid(void)
@@ -77,7 +77,6 @@ static void test_connect_valid(void)
     vcan_node_t node = {
             .callback_on_rx = does_nothing,
             .other_custom_data = NULL,
-            .received_msg.id = 42
     };
 
     err = vcan_connect(&bus, &node);
@@ -96,7 +95,6 @@ static void test_connect_already_connected(void)
     vcan_node_t node = {
             .callback_on_rx = does_nothing,
             .other_custom_data = NULL,
-            .received_msg.id = 42
     };
 
     err = vcan_connect(&bus, &node);
@@ -116,7 +114,6 @@ static void test_connect_max_reached(void)
     vcan_node_t node = {
             .callback_on_rx = does_nothing,
             .other_custom_data = NULL,
-            .received_msg.id = 42
     };
 
     bus.connected = VCAN_MAX_CONNECTED_NODES;
@@ -153,7 +150,6 @@ static void test_disconnect_valid(void)
     vcan_node_t node = {
             .callback_on_rx = does_nothing,
             .other_custom_data = NULL,
-            .received_msg.id = 42
     };
     err = vcan_connect(&bus, &node);
     atto_eq(err, VCAN_OK);
@@ -172,7 +168,6 @@ static void test_disconnect_empty_bus(void)
     vcan_node_t node = {
             .callback_on_rx = does_nothing,
             .other_custom_data = NULL,
-            .received_msg.id = 42
     };
 
     err = vcan_disconnect(&bus, &node);
@@ -189,12 +184,12 @@ static void test_disconnect_not_found(void)
     vcan_node_t node_1 = {
             .callback_on_rx = does_nothing,
             .other_custom_data = NULL,
-            .received_msg.id = 42
+            .id = 1
     };
     vcan_node_t node_2 = {
             .callback_on_rx = does_nothing,
             .other_custom_data = NULL,
-            .received_msg.id = 42 + 1
+            .id = 2
     };
     err = vcan_connect(&bus, &node_1);
     atto_eq(err, VCAN_OK);
@@ -239,15 +234,18 @@ static void test_tx_no_nodes_connected(void)
     err = vcan_tx(&bus, &msg, NULL);
 
     atto_eq(err, VCAN_OK);
+    atto_memeq(&msg, &bus.received_msg, sizeof(vcan_msg_t));
 }
 
-static void sets_custom_data_to_1(vcan_node_t* node)
+static void sets_custom_data_to_1(vcan_node_t* node, const vcan_msg_t* msg)
 {
+    (void) msg;
     node->other_custom_data = (void*) 1;
 }
 
-static void sets_custom_data_to_2(vcan_node_t* node)
+static void sets_custom_data_to_2(vcan_node_t* node, const vcan_msg_t* msg)
 {
+    (void) msg;
     node->other_custom_data = (void*) 2;
 }
 
@@ -259,14 +257,12 @@ static void test_tx_to_all_nodes(void)
     vcan_node_t node_1 = {
             .callback_on_rx = sets_custom_data_to_1,
             .other_custom_data = NULL,
-            .received_msg.id = 42,
-            .received_msg.len = 50
+            .id = 1,
     };
     vcan_node_t node_2 = {
             .callback_on_rx = sets_custom_data_to_1,
             .other_custom_data = NULL,
-            .received_msg.id = 43,
-            .received_msg.len = 51
+            .id = 2,
     };
     err = vcan_connect(&bus, &node_1);
     atto_eq(err, VCAN_OK);
@@ -284,8 +280,7 @@ static void test_tx_to_all_nodes(void)
 
     atto_eq(err, VCAN_OK);
     // Message was copied
-    atto_memeq(&node_1.received_msg, &msg, sizeof(msg));
-    atto_memeq(&node_2.received_msg, &msg, sizeof(msg));
+    atto_memeq(&msg, &bus.received_msg, sizeof(vcan_msg_t));
     // Callbacks were called
     atto_eq((int) node_1.other_custom_data, 1);
     atto_eq((int) node_2.other_custom_data, 2);
@@ -300,14 +295,12 @@ static void test_tx_to_all_nodes_except_source(void)
     vcan_node_t node_1 = {
             .callback_on_rx = sets_custom_data_to_1,
             .other_custom_data = NULL,
-            .received_msg.id = 42,
-            .received_msg.len = 50
+            .id = 1
     };
     vcan_node_t node_2 = {
             .callback_on_rx = does_nothing,
             .other_custom_data = NULL,
-            .received_msg.id = 43,
-            .received_msg.len = 0xAB
+            .id = 2
     };
     err = vcan_connect(&bus, &node_1);
     atto_eq(err, VCAN_OK);
@@ -325,26 +318,25 @@ static void test_tx_to_all_nodes_except_source(void)
 
     atto_eq(err, VCAN_OK);
     // Message was copied
-    atto_memeq(&node_1.received_msg, &msg, sizeof(msg));
+    atto_memeq(&msg, &bus.received_msg, sizeof(vcan_msg_t));
     // Callback was called
     atto_eq((int) node_1.other_custom_data, 1);
     // Source node untouched
     atto_eq(node_2.other_custom_data, NULL);
-    atto_eq(node_2.received_msg.len, 0xAB);
 }
 
-static void callback_print_msg(vcan_node_t* node)
+static void callback_print_msg(vcan_node_t* node, const vcan_msg_t* msg)
 {
     printf("Node %"PRIu32" received "
            "ID: 0x%08"PRIX32""
            " | Len: %"PRIu32""
            " | Data: ",
            node->id,
-           node->received_msg.id,
-           node->received_msg.len);
-    for (size_t i = 0; i < node->received_msg.len; i++)
+           msg->id,
+           msg->len);
+    for (size_t i = 0; i < msg->len; i++)
     {
-        printf("%02"PRIX8" ", node->received_msg.data[i]);
+        printf("%02"PRIX8" ", msg->data[i]);
     }
     puts("");
 }
