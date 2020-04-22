@@ -10,6 +10,27 @@ and this project adheres to
 
 *******************************************************************************
 
+[2.0.0] - 2020-04-22
+----------------------------------------
+
+Performance improvement, which breaks compatibility, although slightly.
+
+
+### Modified
+
+- The message is not copied into the node anymore, it is removed from the 
+  `vcan_node_t` struct. Instead it is copied once and only once into the
+  `vcan_bus_t` struct, to avoid copying it into every single node.
+- Due to the upper point, the callbacks now obtain also a const pointer to the
+  message as a second parameter.
+
+
+### Fixed
+
+- Minor doxygen documentation improvements.
+
+
+
 [1.0.0] - 2020-04-21
 ----------------------------------------
 

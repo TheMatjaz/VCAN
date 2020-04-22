@@ -1,7 +1,7 @@
 /**
  * @file
  *
- * VCAN is a tiny virtual CAN and CAN-FD bus.
+ * VCAN is a tiny Virtual CAN and CAN-FD bus.
  *
  * Especially useful for debugging and testing without using actual
  * CAN-connected devices, VCAN is a tiny C library that allows the user to
@@ -14,7 +14,7 @@
  *
  * **Limitations**
  *
- * VCAN is simple, synchronous and single-threaded. It does not simulate
+ * VCAN is simple, synchronous and not thread safe. It does not simulate
  * transmission errors, collisions, arbitration, etc. just pure data transfer.
  * Callbacks should be fast.
  *
@@ -34,7 +34,7 @@ extern "C"
 #endif
 
 /** VCAN version using semantic versioning. */
-#define VCAN_VERSION "1.0.0"
+#define VCAN_VERSION "2.0.0"
 
 #include <stdint.h>
 #include <stddef.h>
@@ -104,18 +104,14 @@ struct vcan_node
      * to any custom data it may need and of course to the just received
      * message.
      */
-    void (* callback_on_rx)(struct vcan_node* node);
+    void (* callback_on_rx)(struct vcan_node* node, const vcan_msg_t* msg);
 
     /** Any data the callback may need, such as a flag to trigger on
      * reception. Can be NULL. */
     void* other_custom_data;
 
-    /** Identifier of the node. Can be set to anything, VCAN does not change
-     * it. */
+    /** Identifier of the node. Can be set to anything, VCAN does not use it. */
     uint32_t id;
-
-    /** The just-received message. */
-    vcan_msg_t received_msg;
 };
 
 /**
@@ -133,6 +129,9 @@ typedef struct vcan_node vcan_node_t;
  */
 typedef struct
 {
+    /** The message just transmitted over the bus. */
+    vcan_msg_t received_msg;
+
     /** Nodes to deliver new messages to. */
     vcan_node_t* nodes[VCAN_MAX_CONNECTED_NODES];
 
@@ -192,6 +191,12 @@ vcan_err_t vcan_disconnect(vcan_bus_t* bus, const vcan_node_t* node);
  * callback to notify them.
  *
  * If you include a transmitting node, that one is excluded from the reception.
+ *
+ * The callbacks must be fast in order to make this function perform quick
+ * enough. Before transmitting the next message, the user should take care
+ * that each virtual node has finished processing the message (e.g. copying to
+ * another location), so the next transmit does not overwrite the
+ * unprocessed message in the nodes.
  *
  * @param bus not NULL
  * @param msg not NULL

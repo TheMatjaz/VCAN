@@ -1,12 +1,14 @@
 /**
  * @file
  *
+ * VCAN library implementation.
+ *
  * @copyright Copyright © 2020, Matjaž Guštin <dev@matjaz.it>
  * <https://matjaz.it>. All rights reserved.
  * @license BSD 3-clause license.
  */
 
-#include "../inc/vcan.h"
+#include "vcan.h"
 
 vcan_err_t vcan_init(vcan_bus_t* const bus)
 {
@@ -38,12 +40,12 @@ vcan_err_t vcan_tx(vcan_bus_t* const bus,
     }
     else
     {
+        memcpy(&bus->received_msg, msg, sizeof(vcan_msg_t));
         for (size_t i = 0; i < bus->connected; i++)
         {
             if (bus->nodes[i] != src_node)
             {
-                memcpy(&bus->nodes[i]->received_msg, msg, sizeof(vcan_msg_t));
-                bus->nodes[i]->callback_on_rx(bus->nodes[i]);
+                bus->nodes[i]->callback_on_rx(bus->nodes[i], &bus->received_msg);
             }
         }
         err = VCAN_OK;
