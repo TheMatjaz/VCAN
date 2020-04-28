@@ -1,0 +1,5 @@
+<map id="vcan_bus_t" name="vcan_bus_t">
+<area shape="rect" id="node1" title="Virtual bus." alt="" coords="60,92,149,117"/>
+<area shape="rect" id="node2" href="$structvcan__node.html" title="Virtual node." alt="" coords="5,5,92,31"/>
+<area shape="rect" id="node3" href="$structvcan__msg__t.html" title="Message to transmit or receive." alt="" coords="115,5,209,31"/>
+</map>

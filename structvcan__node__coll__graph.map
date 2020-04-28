@@ -1,0 +1,4 @@
+<map id="vcan_node" name="vcan_node">
+<area shape="rect" id="node1" title="Virtual node." alt="" coords="9,92,95,117"/>
+<area shape="rect" id="node2" href="$structvcan__msg__t.html" title="Message to transmit or receive." alt="" coords="5,5,99,31"/>
+</map>
